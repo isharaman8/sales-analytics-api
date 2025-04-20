@@ -1,13 +1,28 @@
 const Order = require("../models/order");
 const { randomUUID } = require("crypto");
-const client = require("../redisClient");
+const createRedisClient = require("../redisClient");
+
+let redisConnected, redisClient;
+
+(async () => {
+	const { is_connected, client } = await createRedisClient();
+
+	if (is_connected) {
+		console.log("Redis enabled");
+	} else {
+		console.log("Redis disabled");
+	}
+
+	redisConnected = is_connected;
+	redisClient = client;
+})();
 
 const cacheSalesAnalytics = (key, data) => {
-	client.setEx(key, 3600, JSON.stringify(data));
+	redisClient.setEx(key, 3600, JSON.stringify(data));
 };
 
 const getCachedSalesAnalytics = async (key) => {
-	return await client.get(key);
+	return await redisClient.get(key);
 };
 
 module.exports = {
@@ -73,12 +88,15 @@ module.exports = {
 
 	async getSalesAnalytics({ startDate, endDate }) {
 		const cacheKey = `sales-analytics:${startDate}:${endDate}`;
-		const cachedData = await getCachedSalesAnalytics(cacheKey);
 
-		if (cachedData) {
-			console.log("returning cached data");
+		if (redisConnected) {
+			const cachedData = await getCachedSalesAnalytics(cacheKey);
 
-			return JSON.parse(cachedData);
+			if (cachedData) {
+				console.log("returning cached data");
+
+				return JSON.parse(cachedData);
+			}
 		}
 
 		const start = new Date(startDate);
@@ -129,7 +147,9 @@ module.exports = {
 			})),
 		};
 
-		cacheSalesAnalytics(cacheKey, analyticsData);
+		if (redisConnected) {
+			cacheSalesAnalytics(cacheKey, analyticsData);
+		}
 
 		return analyticsData;
 	},

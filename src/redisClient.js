@@ -1,24 +1,45 @@
 const redis = require("redis");
-const client = redis.createClient({
-	url: "redis://localhost:6379",
-});
 
-client.on("connect", () => {
-	console.log("✅ Redis client connected");
-});
+async function createRedisClient() {
+	const redisUrl = process.env.REDIS_URL;
 
-client.on("error", (err) => {
-	console.error("❌ Redis client error:", err);
-});
+	if (!redisUrl) {
+		return { is_connected: false, client: null };
+	}
 
-client.on("ready", () => {
-	console.log("✅ Redis client ready");
-});
+	const client = redis.createClient({
+		url: process.env.REDIS_URL,
+	});
 
-client.on("end", () => {
-	console.log("ℹ️ Redis client connection ended");
-});
+	let is_connected = false;
 
-client.connect().catch(console.error);
+	client.on("connect", () => {
+		console.log("✅ Redis client connected");
+		is_connected = true;
+	});
 
-module.exports = client;
+	client.on("ready", () => {
+		console.log("✅ Redis client ready");
+	});
+
+	client.on("error", (err) => {
+		console.error("❌ Redis client error:", err);
+		is_connected = false;
+	});
+
+	client.on("end", () => {
+		console.log("ℹ️ Redis client connection ended");
+		is_connected = false;
+	});
+
+	try {
+		await client.connect();
+	} catch (err) {
+		console.error("❌ Failed to connect to Redis:", err);
+		return { is_connected: false, client: null };
+	}
+
+	return { is_connected, client };
+}
+
+module.exports = createRedisClient;

@@ -20,3 +20,8 @@ npm install
 npm run seed
 npm run dev
 ```
+
+## Variables Used
+
+1. REDIS_URL
+2. MONGODB_URI
