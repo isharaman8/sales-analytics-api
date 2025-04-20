@@ -10,10 +10,9 @@ const app = express();
 app.use("/graphql", createHandler({ schema, rootValue }));
 
 const port = process.env.PORT || 4000;
+
 mongoose.connect(process.env.MONGODB_URI).then(() => {
-	app.listen(process.env.PORT, () => {
-		console.log(
-			`Server running on http://localhost:${process.env.PORT}/graphql`
-		);
+	app.listen(port, () => {
+		console.log(`Server running on http://localhost:${port}/graphql`);
 	});
 });

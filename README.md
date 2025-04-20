@@ -13,3 +13,10 @@ git clone https://github.com/isharaman8/sales-analytics-api.git
 cd sales-analytics-api
 npm install
 ```
+
+### 2. Seed & Server Start
+
+```bash
+npm run seed
+npm run dev
+```
