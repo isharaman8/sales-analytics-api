@@ -56,6 +56,8 @@ const seedDB = async () => {
 
 	console.log("✅ Seeded customers, products, and orders successfully!");
 	mongoose.disconnect();
+
+	process.exit(0);
 };
 
 seedDB();
