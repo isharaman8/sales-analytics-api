@@ -1,4 +1,14 @@
 const Order = require("../models/order");
+const { randomUUID } = require("crypto");
+const client = require("../redisClient");
+
+const cacheSalesAnalytics = (key, data) => {
+	client.setEx(key, 3600, JSON.stringify(data));
+};
+
+const getCachedSalesAnalytics = async (key) => {
+	return await client.get(key);
+};
 
 module.exports = {
 	async getCustomerSpending({ customerId }) {
@@ -62,6 +72,15 @@ module.exports = {
 	},
 
 	async getSalesAnalytics({ startDate, endDate }) {
+		const cacheKey = `sales-analytics:${startDate}:${endDate}`;
+		const cachedData = await getCachedSalesAnalytics(cacheKey);
+
+		if (cachedData) {
+			console.log("returning cached data");
+
+			return JSON.parse(cachedData);
+		}
+
 		const start = new Date(startDate);
 		const end = new Date(endDate);
 
@@ -101,7 +120,7 @@ module.exports = {
 			orderDate: { $gte: start, $lte: end },
 		});
 
-		return {
+		const analyticsData = {
 			totalRevenue,
 			completedOrders,
 			categoryBreakdown: data.map((item) => ({
@@ -109,5 +128,23 @@ module.exports = {
 				revenue: item.revenue,
 			})),
 		};
+
+		cacheSalesAnalytics(cacheKey, analyticsData);
+
+		return analyticsData;
+	},
+	async getOrders({ page, limit }) {
+		const skip = (page - 1) * limit;
+		const orders = await Order.find().skip(skip).limit(limit);
+		return orders;
+	},
+	async placeOrder({ order }) {
+		order["_id"] = randomUUID();
+		order["status"] = "pending";
+		order["orderDate"] = new Date();
+
+		const newOrder = new Order(order);
+		await newOrder.save();
+		return newOrder;
 	},
 };

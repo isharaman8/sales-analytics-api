@@ -34,10 +34,26 @@ module.exports = buildSchema(`
     orderDate: String!
   }
 
+  input ProductInput {
+    productId: ID!
+    quantity: Int!
+    priceAtPurchase: Float!
+  }
+
+  input OrderInput {
+    customerId: String!
+    products: [ProductInput!]!
+    totalAmount: Float!
+  }
+
   type Query {
     getCustomerSpending(customerId: ID!): CustomerSpending
     getTopSellingProducts(limit: Int!): [Product!]
     getSalesAnalytics(startDate: String!, endDate: String!): SalesAnalytics
-    getOrders: [Order!]  # New 'orders' query added
+    getOrders(page: Int!, limit: Int!): [Order!]  # Added pagination
+  }
+
+  type Mutation {
+    placeOrder(order: OrderInput!): Order!  # Mutation to place an order
   }
 `);

@@ -1,5 +1,6 @@
-query GetCustomerSpending {
-	getCustomerSpending(customerId: "63f8b3d5a7b1d7f3b0a2c5e1") {
+# Query to get customer spending details
+query {
+	getCustomerSpending(customerId: "customer-id-123") {
 		customerId
 		totalSpent
 		averageOrderValue
@@ -7,21 +8,54 @@ query GetCustomerSpending {
 	}
 }
 
-query GetTopSellingProducts {
-	getTopSellingProducts(limit: 2) {
+# Query to get top selling products
+query {
+	getTopSellingProducts(limit: 5) {
 		productId
 		name
 		totalSold
 	}
 }
 
-query GetSalesAnalytics {
-	getSalesAnalytics(startDate: "2024-02-01", endDate: "2024-03-01") {
+# Query to get sales analytics for a date range
+query {
+	getSalesAnalytics(startDate: "2025-01-01", endDate: "2025-01-31") {
 		totalRevenue
 		completedOrders
 		categoryBreakdown {
 			category
 			revenue
 		}
+	}
+}
+
+# Query to get orders with pagination
+query {
+	getOrders(page: 1, limit: 10) {
+		_id
+		customerId
+		totalAmount
+		status
+		orderDate
+	}
+}
+
+# Mutation to place an order
+mutation {
+	placeOrder(
+		order: {
+			customerId: "customer-id-123"
+			products: [
+				{ productId: "product-id-1", quantity: 2, priceAtPurchase: 20.0 }
+				{ productId: "product-id-2", quantity: 1, priceAtPurchase: 50.0 }
+			]
+			totalAmount: 90.0
+		}
+	) {
+		_id
+		customerId
+		totalAmount
+		status
+		orderDate
 	}
 }
